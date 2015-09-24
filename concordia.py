@@ -89,12 +89,11 @@ def read_file(filehandle):
     """Open, read and normalize encoding of file and return the content as
     string
     """
-    logging.debug('Opening {}...'.format(filehandle))
+    logging.debug('Opening and normalizing {}.'.format(filehandle))
     with open(filehandle, 'r') as f:
         content_read = f.read()
         content_normalized = normalize('NFC', content_read.decode('utf-8'))
 
-    logging.debug('{} opened and normalized.'.format(filehandle))
     return(content_normalized)
 
 
