@@ -18,13 +18,44 @@ def recursive_string_find(pattern, string, where_should_I_start=0):
 
     # No need for else statement
     return [pos] + recursive_string_find(pattern, string, pos + len(pattern))
+
+
+# def find_lemmas_in_list(token, lemma_list):
+#     """Find the first word of a lemma list line which will therefore
+#     represent the lemma of the searched token
+
+#     Keyword Arguments:
+#     tokens -- list of tokens to be matched with lemmas
+#     """
+
+#     token = ' ' + token.strip() + ' '
+#     # lemma_lines = [line for line in lemma_list if ' ' + token.strip() + ' ' in line]
+#     def present_in_line(sequence, value):
+#         for element in sequence:
+#             if value in element: yield element
+
+#     lemma_lines = present_in_line(lemma_list, token)
+
+#     # lemma_lines = list(line for line in lemma_list if token in line)
+#     lemmas = [line.split(' ')[0] for line in lemma_lines]
+
+#     return(lemmas)
+
+def find_lemmas(token, lemma_string):
+    """Find all the possible lemma suggestions to one token. Input the
+    need and haystack, the token that needs to be parsed, and the list
+    of lemmas.
+
+    Returns a list of possible lemmas.
     """
 
     result_list = []
-    for item in tokens:
-        previous_linebreak = lemmas.rfind('\n', item-5000, item)
-        matchObj = re.match(r'[^ ]+', lemmas[previous_linebreak+1:])
-        result_list.append(matchObj.group())
+    token = ' ' + token.strip() + ' '
+    lemma_list = recursive_string_find(token, lemma_string)
+    for item in lemma_list:
+        previous_linebreak = lemma_string.rfind('\n', item-5000, item)
+        matchObj = lemma_string[previous_linebreak:previous_linebreak+40].split(' ')[0]
+        result_list.append(matchObj)
 
     return(result_list)
 
@@ -220,12 +251,12 @@ def lemmatize_text(content_list, lemma_list):
             line_number = re.match(line_number_object, line).group()
 
             # Put index of all matches of token in lemma list in list
-            match_list = recursive_string_find(' %s ' % word, lemmas)
+            match_list = find_lemmas(word, lemmas)
 
             # If there is exactly one match, define the lemma and create
             # an entry in the dictionary of matches
             if len(match_list) == 1:
-                lemma = find_lemmas(match_list, lemmas)[0]
+                lemma = match_list[0]
                 log.debug('Single match in line {0}. Token: {1}; lemma: {2}.'.format(
                     line_number,
                     word.encode('utf-8'),
@@ -253,11 +284,10 @@ def lemmatize_text(content_list, lemma_list):
 
             # Matched > 1: Disambiguation needed
             elif len(match_list) > 1:
-                match_lemma_suggestions = find_lemmas(match_list, lemmas)
 
                 # Write items into disambiguation list
                 disamb_list.append(
-                    [word, line, [lemma for lemma in match_lemma_suggestions]]
+                    [word, line, [lemma for lemma in match_list]]
                 )
 
             # Matched exactly one word. Add line to corresponding lemma
