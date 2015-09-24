@@ -122,3 +122,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# I dont want to include the txt-files. They are output.
+*.txt
