@@ -6,12 +6,18 @@ import re
 import logging
 
 
-def find_lemmas(tokens, lemmas):
-    """Find the first word of a lemma list line which will therefore
-    represent the lemma of the searched token 
+def recursive_string_find(pattern, string, where_should_I_start=0):
+    """Recursive search function.
 
-    Keyword Arguments:
-    tokens -- list of tokens to be matched with lemmas
+    Returns list of indices of `pattern` in `string`.
+    """
+    pos = string.find(pattern, where_should_I_start)
+    if pos == -1:
+        # Not found!
+        return []
+
+    # No need for else statement
+    return [pos] + recursive_string_find(pattern, string, pos + len(pattern))
     """
 
     result_list = []
@@ -183,19 +189,6 @@ def lemmatize_text(content_list, lemma_list):
         sys.stdout.write(' {:2.0f} %\r'.format(percent))
         sys.stdout.flush()
 
-    def recursive_string_find(pattern, string, where_should_I_start=0):
-        """Recursive search function. 
-
-        Returns list of indices of `pattern` in `string`.
-        """
-        pos = string.find(pattern, where_should_I_start)
-        if pos == -1:
-            # Not found!
-            return []
-
-        # No need for else statement
-        return [pos] + recursive_string_find(pattern, string, pos + len(pattern))
-    
 
     logging.debug('Initializing lemmatization function...')
     
