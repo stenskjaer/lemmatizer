@@ -85,13 +85,24 @@ def clean_matches(dictionary_of_matches):
     return(matches)
 
 
+def read_file(filehandle):
+    """Open, read and normalize encoding of file and return the content as
+    string
+    """
+    logging.debug('Opening {}...'.format(filehandle))
+    with open(filehandle, 'r') as f:
+        content_read = f.read()
+        content_normalized = normalize('NFC', content_read.decode('utf-8'))
+
+    logging.debug('{} opened and normalized.'.format(filehandle))
+    return(content_normalized)
+
+
 def normalize_greek_accents(text):
     """Sanitize text for analysis. Includes making turning grave accents
     into acutes, making the whole text lowercase and removing
     punctuation (.,·)
     """
-    # Normalize the text
-    text = normalize('NFC', text.decode('utf-8'))
 
     # Switch graves to acutes
     text = text.replace(u'ὰ', u'ά')
@@ -158,21 +169,6 @@ def add_line_numbers_to_lines(list_of_lines):
     return(new_line_list)
 
 
-def read_lemma_file():
-    """ Opens, reads and normalizes the lemma file and returns a string.
-    """
-    logging.info('Opening lemma list file ...')
-    print('Reading the dictionary, be right back ...')
-    
-    lemma_file = 'lemmalist.txt'
-    lemmas_read = open(lemma_file).read()
-    lemmas_normalized = normalize('NFC', lemmas_read.decode('utf-8'))
-
-    logging.info('Lemma file opened and normalized.')
-
-    return(lemmas_normalized)
-
-
 def lemmatize_text(content_list, lemma_list):
     """Lemmatizes all words in text.
     Variables:
@@ -229,10 +225,9 @@ def lemmatize_text(content_list, lemma_list):
     iteration = 1
     word_count = word_count(content_list)
 
-    # Open stopwords. TODO: Make function
-    with open('stopwords.txt', 'r') as f:
-        stopword_string = f.readlines()
-        stopword_list = [normalize('NFC', word.decode('utf-8')).strip() for word in stopword_string]
+    # Read stopwords into list
+    stopword_list = [word.strip() for word in read_file('stopwords.txt').split('\n')]
+
 
     # Run each line and word of the text
     for line in content_list:
@@ -385,8 +380,7 @@ if __name__ == "__main__":
     script, filename = argv
 
     # Open and read the text
-    content = open(filename).read()
-    logging.debug('Opened and loaded {0}'.format(filename))
+    content = read_file(filename)
 
     content = normalize_greek_accents(content)
     logging.debug('Normalize accents of the loaded text.')
@@ -397,8 +391,8 @@ if __name__ == "__main__":
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
 
-    # Read the dictionary into memory as string.
-    lemmas = read_lemma_file()
+    lemmas = read_file('lemmalist.txt')
+    logging.debug('Lemma list read into memory')
 
     matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas)
 
