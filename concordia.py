@@ -155,8 +155,6 @@ def add_line_numbers_to_lines(list_of_lines):
             current_line_mark = "{0}{1}".format(last_line_mark, current_line_num)
             new_line_list.append(current_line_mark + ' ' + line)
 
-    for line in new_line_list:
-        print line.encode('utf-8')
     return(new_line_list)
 
 
@@ -164,6 +162,7 @@ def read_lemma_file():
     """ Opens, reads and normalizes the lemma file and returns a string.
     """
     logging.info('Opening lemma list file ...')
+    print('Reading the dictionary, be right back ...')
     
     lemma_file = 'lemmalist.txt'
     lemmas_read = open(lemma_file).read()
@@ -172,7 +171,6 @@ def read_lemma_file():
     logging.info('Lemma file opened and normalized.')
 
     return(lemmas_normalized)
-
 
 
 def lemmatize_text(content_list, lemma_list):
@@ -192,7 +190,6 @@ def lemmatize_text(content_list, lemma_list):
         """Get wordcount from list of all words in text.
         Use itertools to flatten nested list of words in lines in line_list
         """
-        # 
         from itertools import chain
 
         word_count = len(
@@ -205,8 +202,9 @@ def lemmatize_text(content_list, lemma_list):
 
         return(word_count)
 
-
     def print_progress(word, iteration, word_count):
+        """Output the progress of the scrip to std.out.
+        """
         increment = word_count / 30.0
         percent = (float(iteration) / word_count) * 100
         percent = round((iteration / float(word_count)) * 100.0, 0)
@@ -243,7 +241,10 @@ def lemmatize_text(content_list, lemma_list):
         for word in line[8:].split(' '):
             logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
             
+            # Remove dots, they confuse the parser
             word = word.replace('.', '')
+
+            # Enlighten the user
             print_progress(word, iteration, word_count)
 
             # Increase iteration for use in progress function
@@ -252,7 +253,7 @@ def lemmatize_text(content_list, lemma_list):
             # NB: This line numbering identification is based on the assumption of stephanus-pages!
             line_number = line[:8].strip()
 
-            # Put index of all matches of token in lemma list in list
+            # Put all possible lemmas of token in list
             match_list = find_lemmas(word, lemmas)
 
             # If there is exactly one match, define the lemma and create
@@ -277,7 +278,7 @@ def lemmatize_text(content_list, lemma_list):
                     )
                     continue
 
-            # Process according to amount of suggestions
+            # Sort into the three output lists according to amount of suggestions.            
             # No match
             if len(match_list) < 1:
                 nomatch_list.append(
@@ -289,11 +290,11 @@ def lemmatize_text(content_list, lemma_list):
 
                 # Write items into disambiguation list
                 disamb_list.append(
-                    [word, line, [lemma for lemma in match_list]]
+                    [word, line, [lemma.strip() for lemma in match_list]]
                 )
 
             # Matched exactly one word. Add line to corresponding lemma
-            # list (created above) in the dictionary of matches
+            # list in the dictionary of matches
             else:
                 if lemma in match_dict.keys():
                     match_dict[lemma].append(line_number)
@@ -342,7 +343,7 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
     output += lvl2('The following terms need disambiguation:')
     for disamb_term in disamb_list:
-        output += '{0} in {1}'.format(
+        output += '{0} in {1}\n'.format(
             disamb_term[0].encode('utf-8'),
             disamb_term[1].encode('utf-8')
         )
@@ -370,9 +371,6 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
 if __name__ == "__main__":
 
-    # Temporary config variables
-    USE_STOPWORDS = True
-
     # Setup logging
     logging.basicConfig(
         filename='output.log',
@@ -399,6 +397,7 @@ if __name__ == "__main__":
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
 
+    # Read the dictionary into memory as string.
     lemmas = read_lemma_file()
 
     matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas)
@@ -406,10 +405,6 @@ if __name__ == "__main__":
     output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, to_file=True)
 
 
-
-
-
 # TODO:
-# Stopwords
 # Tæl antal forekomster i linjerne
 # Standardvalg i disambiguation
