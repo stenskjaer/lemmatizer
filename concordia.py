@@ -62,7 +62,7 @@ def find_lemmas(token, lemma_string):
 def clean_matches(dictionary_of_matches):
     """Function for counting instances of line references in the
     dictionary of matches created by the lemmatization function.  This
-    function uses defaultdict to count items in list. See 
+    function uses defaultdict to count items in list. See
     https://docs.python.org/2/library/collections.html#defaultdict-objects
     """
     from collections import defaultdict
@@ -97,7 +97,7 @@ def normalize_greek_accents(text):
     text = text.replace(u'ὰ', u'ά')
     text = text.replace(u'ὲ', u'έ')
     text = text.replace(u'ὶ', u'ί')
-    text = text.replace(u'ὸ', u'ό')       
+    text = text.replace(u'ὸ', u'ό')
     text = text.replace(u'ὺ', u'ύ')
     text = text.replace(u'ὴ', u'ή')
     text = text.replace(u'ὼ', u'ώ')
@@ -242,6 +242,8 @@ def lemmatize_text(content_list, lemma_list):
         log.debug('Start lemmatization of the line: ' + line)
 
         for word in line[8:].split(' '):
+            logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
+            
             word = word.replace('.', '')
             print_progress(word, iteration, word_count)
 
@@ -274,7 +276,7 @@ def lemmatize_text(content_list, lemma_list):
                         )
                     )
                     continue
-        
+
             # Process according to amount of suggestions
             # No match
             if len(match_list) < 1:
@@ -299,13 +301,13 @@ def lemmatize_text(content_list, lemma_list):
                     match_dict[lemma] = [line_number]
 
     match_dict = clean_matches(match_dict)
-    
+
     return(match_dict, disamb_list, nomatch_list)
 
 
 def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, to_file=False):
     """Function for printing the results
-    
+
     """
     from time import strftime
 
@@ -322,14 +324,14 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
             title,
             '-' * length,
         )
-    
+
     output = ''
 
     output += lvl1('Index of terms in {0}'.format(filename))
     output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
-    
+
     output += lvl2('The following terms were found in the text:')
-    
+
     # sorted(matches.keys()) iterates the keys alphabetically
     for term in sorted(matches.keys()):
         output += '{0}: {1}'.format(
@@ -367,7 +369,7 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
 
 if __name__ == "__main__":
-        
+
     # Temporary config variables
     USE_STOPWORDS = True
 
@@ -396,7 +398,7 @@ if __name__ == "__main__":
 
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
-    
+
     lemmas = read_lemma_file()
 
     matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas)
