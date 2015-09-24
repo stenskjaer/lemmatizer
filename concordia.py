@@ -230,7 +230,6 @@ def lemmatize_text(content_list, lemma_list):
     match_dict = {}
     iteration = 1
     word_count = word_count(content_list)
-    line_number_object = re.compile('\d+\.[a-e]\.\d+')
 
     # Open stopwords. TODO: Make function
     with open('stopwords.txt', 'r') as f:
@@ -250,7 +249,8 @@ def lemmatize_text(content_list, lemma_list):
             # Increase iteration for use in progress function
             iteration += 1
 
-            line_number = re.match(line_number_object, line).group()
+            # NB: This line numbering identification is based on the assumption of stephanus-pages!
+            line_number = line[:8].strip()
 
             # Put index of all matches of token in lemma list in list
             match_list = find_lemmas(word, lemmas)
