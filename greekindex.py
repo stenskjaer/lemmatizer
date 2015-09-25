@@ -352,15 +352,16 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
     output += lvl2('The following terms were found in the text:')
 
     # sorted(matches.keys()) iterates the keys alphabetically. Uses
-    # pyuca to sort the Greek properly.
+    # pyuca to sort the Greek properly. See https://github.com/jtauber/pyuca
     c = Collator()
     for term in sorted(matches.keys(), key=c.sort_key):
         if term:                # Ugly hack to solve strange occurence of empty terms
-            output += '{0}: {1}\n'.format(
+            output += '{0}: {1}'.format(
                 term.encode('utf-8'),
                 matches[term].encode('utf-8')
             )
-
+    output += '\n'
+            
     output += lvl2('The following terms need disambiguation:')
     for disamb_term in disamb_list:
         output += '{0} in {1}\n'.format(
