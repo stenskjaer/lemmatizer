@@ -214,13 +214,27 @@ def lemmatize_text(content_list, lemma_list):
         sys.stdout.flush()
 
 
+    def add_to_dict(key, value, dict):
+        """Add the word to the dictionary of matched. If there is no entry,
+        create it.
+        """
+        if key in dict.keys():
+            dict[key].append(value)
+        else:
+            dict[key] = [value]
+
+
     logging.debug('Initializing lemmatization function...')
     
     # First some variables
     lemmas = lemma_list
-    disamb_list = []
-    nomatch_list = []
     match_dict = {}
+    nomatch_list = []
+    disamb_list = []
+    # Hack: Add whitespace to end of disambiguation file for matching
+    # of tokens in find_lemmas function
+    disamb_file = read_file('disambiguation.txt').replace('\n', ' \n')
+
     iteration = 1
     word_count = word_count(content_list)
 
@@ -230,7 +244,7 @@ def lemmatize_text(content_list, lemma_list):
 
     # Run each line and word of the text
     for line in content_list:
-        log.debug('Start lemmatization of the line: ' + line)
+        log.debug('Start lemmatization of the line: ' + line.encode('utf-8'))
 
         for word in line[8:].split(' '):
             logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
@@ -281,11 +295,17 @@ def lemmatize_text(content_list, lemma_list):
 
             # Matched > 1: Disambiguation needed
             elif len(match_list) > 1:
-
-                # Write items into disambiguation list
-                disamb_list.append(
-                    [word, line, [lemma.strip() for lemma in match_list]]
-                )
+                
+                if word in disamb_file:
+                    lemma = find_lemmas(word, disamb_file)[0]
+                    logging.debug('Word {} in disambiguation. Registering as {}'.format(
+                        word.encode('utf-8'),
+                        lemma.encode('utf-8')))
+                    add_to_dict(lemma, line_number, match_dict)
+                else:
+                    disamb_list.append(
+                        [word, line, [lemma.strip() for lemma in match_list]]
+                    )
 
             # Matched exactly one word. Add line to corresponding lemma
             # list in the dictionary of matches
@@ -329,10 +349,11 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
     # sorted(matches.keys()) iterates the keys alphabetically
     for term in sorted(matches.keys()):
-        output += '{0}: {1}'.format(
-            term.encode('utf-8'),
-            matches[term].encode('utf-8')
-        )
+        if term:                # Ugly hack to solve strange occurence of empty terms
+            output += '{0}: {1}'.format(
+                term.encode('utf-8'),
+                matches[term].encode('utf-8')
+            )
     output += '\n'
 
     output += lvl2('The following terms need disambiguation:')
@@ -400,4 +421,4 @@ if __name__ == "__main__":
 
 # TODO:
 # Tæl antal forekomster i linjerne
-# Standardvalg i disambiguation
+# Standardvalg i disambiguation: Fungerer. Men find en løsning hvor disamb_list ikke skal slutte hver linje med et whitespace
