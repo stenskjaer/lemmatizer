@@ -411,6 +411,7 @@ if __name__ == "__main__":
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
 
+    print('Reading the dictionary, be right back ...')
     lemmas = read_file('lemmalist.txt')
     logging.debug('Lemma list read into memory')
 
