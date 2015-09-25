@@ -325,6 +325,7 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
     """
     from time import strftime
+    from pyuca import Collator
 
     def lvl1(title):
         length = len(title)
@@ -340,6 +341,9 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
             '-' * length,
         )
 
+    if to_shell:
+        print('\nSorting and printing results')
+
     output = ''
 
     output += lvl1('Index of terms in {0}'.format(filename))
@@ -347,14 +351,15 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
     output += lvl2('The following terms were found in the text:')
 
-    # sorted(matches.keys()) iterates the keys alphabetically
-    for term in sorted(matches.keys()):
+    # sorted(matches.keys()) iterates the keys alphabetically. Uses
+    # pyuca to sort the Greek properly.
+    c = Collator()
+    for term in sorted(matches.keys(), key=c.sort_key):
         if term:                # Ugly hack to solve strange occurence of empty terms
-            output += '{0}: {1}'.format(
+            output += '{0}: {1}\n'.format(
                 term.encode('utf-8'),
                 matches[term].encode('utf-8')
             )
-    output += '\n'
 
     output += lvl2('The following terms need disambiguation:')
     for disamb_term in disamb_list:
