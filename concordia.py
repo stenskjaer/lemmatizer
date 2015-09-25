@@ -54,8 +54,8 @@ def find_lemmas(token, lemma_string):
     lemma_list = recursive_string_find(token, lemma_string)
     for item in lemma_list:
         previous_linebreak = lemma_string.rfind('\n', item-5000, item)
-        matchObj = lemma_string[previous_linebreak:previous_linebreak+40].split(' ')[0]
-        result_list.append(matchObj)
+        match = lemma_string[previous_linebreak:previous_linebreak+40].split(' ')[0]
+        result_list.append(match)
 
     return(result_list)
 
