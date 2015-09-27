@@ -6,12 +6,12 @@ import re
 import logging
 
 
-def recursive_string_find(pattern, string, where_should_I_start=0):
+def recursive_string_find(pattern, string, start=0):
     """Recursive search function.
 
     Returns list of indices of `pattern` in `string`.
     """
-    pos = string.find(pattern, where_should_I_start)
+    pos = string.find(pattern, start)
     if pos == -1:
         # Not found!
         return []
