@@ -321,7 +321,7 @@ def lemmatize_text(content_list, lemma_list, args):
     return(match_dict, disamb_list, nomatch_list)
 
 
-def output_results(matches, disamb_list, nomatch_list, filename, args):
+def output_results(matches, disamb_list, nomatch_list, args):
     """Function for printing the results
 
     """
@@ -358,7 +358,7 @@ def output_results(matches, disamb_list, nomatch_list, filename, args):
 
     output = ''
 
-    output += lvl1('Index of terms in {0}'.format(filename))
+    output += lvl1('Index of terms in {0}'.format(args.file))
     output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
 
     output += lvl2('The following terms were found in the text:')
@@ -445,9 +445,6 @@ if __name__ == "__main__":
     log = logging
     log.info('App and logging initiated.')
 
-    # Map command line arguments to script and filename vars
-    script, filename = argv
-
     # Open and read the text
     content = read_file(args.file)
 
@@ -466,5 +463,5 @@ if __name__ == "__main__":
 
     matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas, args)
 
-    output_results(matches, disamb_list, nomatch_list, filename, args)
+    output_results(matches, disamb_list, nomatch_list, args)
     log.info('Results returned sucessfully.')
