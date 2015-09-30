@@ -124,4 +124,5 @@ Temporary Items
 .apdisk
 
 # I dont want to include the txt-files. They are output.
-*.txt
+output.txt
+lemmalist.txt
