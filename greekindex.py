@@ -168,7 +168,7 @@ def add_line_numbers_to_lines(list_of_lines):
     return(new_line_list)
 
 
-def lemmatize_text(content_list, lemma_list):
+def lemmatize_text(content_list, lemma_list, args):
     """Lemmatizes all words in text.
     Variables:
     - the text to be analyzed, split into list of lines.
@@ -233,13 +233,13 @@ def lemmatize_text(content_list, lemma_list):
     disamb_list = []
     # Hack: Add whitespace to end of disambiguation file for matching
     # of tokens in find_lemmas function
-    disamb_file = read_file('disambiguation.txt').replace('\n', ' \n')
+    disamb_file = read_file(args.disambiguations).replace('\n', ' \n')
 
     iteration = 1
     word_count = word_count(content_list)
 
     # Read stopwords into list
-    stopword_list = [word.strip() for word in read_file('stopwords.txt').split('\n')]
+    stopword_list = [word.strip() for word in read_file(args.stopwords).split('\n')]
 
 
     # Run each line and word of the text
@@ -275,7 +275,7 @@ def lemmatize_text(content_list, lemma_list):
                 ))
 
                 # Weed out stopwords (can only be done with nonambiguous terms).
-                # TODO: Implement config to eneable stopwords
+                # TODO: Implement config to enable stopwords
                 if lemma in stopword_list:
                     log.info(
                         'Skipping {0} on line {1}. Matches {2} in stopword list.'.format(
@@ -320,7 +320,7 @@ def lemmatize_text(content_list, lemma_list):
     return(match_dict, disamb_list, nomatch_list)
 
 
-def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, to_file=False):
+def output_results(matches, disamb_list, nomatch_list, filename, args):
     """Function for printing the results
 
     """
@@ -341,7 +341,18 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
             '-' * length,
         )
 
-    if to_shell:
+    TO_FILE = False
+    TO_SHELL = False
+    if args.output is 'shell':
+        TO_SHELL = True
+    elif args.output is 'file':
+        TO_FILE = True
+    elif args.output is 'both':
+        TO_FILE = True
+        TO_SHELL = True
+
+    
+    if TO_SHELL:
         print('\nSorting and printing results')
 
     output = ''
@@ -379,10 +390,10 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
             fail[1].encode('utf-8')
         )
 
-    if to_shell:
+    if TO_SHELL:
         print(output)
 
-    if to_file:
+    if TO_FILE:
         with open('output.txt', 'w') as f:
             f.write(output)
 
@@ -391,22 +402,53 @@ def output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, 
 
 
 if __name__ == "__main__":
+    import argparse
 
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description='Create a list with references to each occurence of any form of any Greek term in a Greek text. The program parses all terms based on a supplied list of lemmas. All identified forms, as well as forms ascribable to more than one lemma and forms that are not found in the lemma list, will be listed.',
+        epilog='The lines of the text must be numbered at regular intervals. Currently the only usable scheme is the Stephanus-numbering with this format "324.d.2". The first line MUST be numbered, otherwise the script fails.'
+    )
+    parser.add_argument('file',
+                        help='The file containing the text that will be analyzed.')
+    parser.add_argument('--lemmalist',
+                        help='The file containing a list of all relevant lemmas. It is to be formatted as follows: One headword per line, with the lemma as the first word with all possible (or relevant) forms following, separated by one whitespace. The liste must be terminated by one whitespace too. "ἅπλωσις ἅπλωσιν ἅπλωσις ἁπλώσει ἁπλώσεις ἁπλώσεως " would this be a well formed statement of all attested forms of the noun ἅπλωσις.',
+                        action='store',
+                        default='lemmalist.txt')    
+    parser.add_argument('-o', '--output',
+                        help='Output the results to shell, file or both. Default: Shell.',
+                        choices=['shell', 'file', 'both'],
+                        action='store',
+                        default='shell')    
+    parser.add_argument('-s', '--stopwords',
+                        help='The file containing a list of stopwords. One word per line, no punctuation. Default: stopwords.txt',
+                        action='store',
+                        default='stopwords.txt'),
+    parser.add_argument('-d', '--disambiguations',
+                        help='The file containing a list of preferred disambiguations. The first word represents the preferred lemma, all subsequent forms represent possible forms of that lemma. One lemma per line with terms separated by one space. Default: disambiguations.txt',
+                        action='store',
+                        default='disambiguations.txt')
+    parser.add_argument('--log',
+                        help='Set the log level (output to output.log in currenct working directory). Default = info.',
+                        default='info')
+    args = parser.parse_args()
+    
     # Setup logging
+    loglevel = args.log
     logging.basicConfig(
         filename='output.log',
         filemode='w',
-        level=logging.DEBUG,
+        level=getattr(logging, loglevel.upper()),
         format='%(levelname)s: %(message)s'
     )
     log = logging
-    log.debug('App and logging initiated.')
+    log.info('App and logging initiated.')
 
     # Map command line arguments to script and filename vars
     script, filename = argv
 
     # Open and read the text
-    content = read_file(filename)
+    content = read_file(args.file)
 
     content = normalize_greek_accents(content)
     logging.debug('Normalize accents of the loaded text.')
@@ -418,14 +460,10 @@ if __name__ == "__main__":
     logging.debug('Line numbers added to list of lines.')
 
     print('Reading the dictionary, be right back ...')
-    lemmas = read_file('lemmalist.txt')
+    lemmas = read_file(args.lemmalist)
     logging.debug('Lemma list read into memory')
 
-    matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas)
+    matches, disamb_list, nomatch_list = lemmatize_text(content_list, lemmas, args)
 
-    output_results(matches, disamb_list, nomatch_list, filename, to_shell=True, to_file=True)
-
-
-# TODO:
-# Tæl antal forekomster i linjerne
-# Standardvalg i disambiguation: Fungerer. Men find en løsning hvor disamb_list ikke skal slutte hver linje med et whitespace
+    output_results(matches, disamb_list, nomatch_list, filename, args)
+    log.info('Results returned sucessfully.')
