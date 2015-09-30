@@ -134,6 +134,7 @@ def normalize_greek_accents(text):
     # Remove punctuation
     text = text.replace(u',', u'')
     text = text.replace(u'·', u'')
+    text = text.replace(u'"', u'')
 
     return(text)
 
