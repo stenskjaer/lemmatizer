@@ -296,8 +296,8 @@ def lemmatize_text(content_list, lemma_list, args):
 
             # Matched > 1: Disambiguation needed
             elif len(match_list) > 1:
-                
-                if word in disamb_file:
+
+                if ' ' + word.strip() + ' ' in disamb_file:
                     lemma = find_lemmas(word, disamb_file)[0]
                     logging.debug('Word {} in disambiguation. Registering as {}'.format(
                         word.encode('utf-8'),
