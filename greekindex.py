@@ -152,236 +152,225 @@ def add_line_numbers_to_lines(list_of_lines):
     return(new_line_list)
 
 
-def word_count(content_list):
-    """Get wordcount from list of all words in text.
-    Use itertools to flatten nested list of words in lines in line_list
-    """
-    from itertools import chain
+class Analyze(object):
+    """A class for all analysis of the text"""
 
-    word_count = len(
-        list(
-            chain.from_iterable(
-                [[word for word in line[1].split(' ')] for line in content_list]
+    def __init__(self, text, lemmas, disambiguations=False, stopwords=False):
+        self.text = text
+        self.lemmas = lemmas
+        self.stopwords = [word.strip() for word in read_file(stopwords).split('\n')]
+        self.disambiguations = read_file(disambiguations).replace('\n', ' \n')
+        self.word_count = self.word_count(self.text)
+
+        logging.debug('Initialized an Analyze object')
+
+    def word_count(self, text):
+        """Get wordcount from list of all words in text.
+        Use itertools to flatten nested list of words in lines in line_list
+
+        return: int value of words in text
+        """
+        from itertools import chain
+
+        word_count = len(
+            list(
+                chain.from_iterable(
+                    [[word for word in line[1].split(' ')] for line in text]
+                )
             )
         )
-    )
 
-    return(word_count)
+        return(word_count)
 
-
-def print_progress(word, iteration, word_count):
-    """Output the progress of the scrip to std.out.
-    """
-    increment = word_count / 30.0
-    percent = (float(iteration) / word_count) * 100
-    percent = round((iteration / float(word_count)) * 100.0, 0)
-    stdout.write(' ' * 80)
-    stdout.write('\r')
-    stdout.write('Analyzing {:29}'.format(
-        word.encode('utf-8') + ' '* (29 - len(word))))
-    stdout.write('[{}{}]'.format(
-        '#' * int(round(iteration / increment, 0)),
-        ' ' * int(round((word_count - iteration) / increment, 0))))
-    stdout.write(' {:2.0f} %\r'.format(percent))
-    stdout.flush()
-
-
-def lemmatize_text(content_list, lemma_list, args):
-    """Lemmatizes all words in text.
-    Variables:
-    - the text to be analyzed, split into list of lines.
-    - list of lemmas
-    - command line arguments
-
-    Return:
-    - dictionary of sucessfully matched terms.
-    - list of terms in need of disambiguation.
-    - list of terms that could not be matched.
-    """
-
-
-    logging.debug('Initializing lemmatization function...')
-
-    # First some variables
-    lemmas = lemma_list
-    match_list = []
-    
-    # Hack: Add whitespace to end of disambiguation file for matching
-    # of tokens in find_lemmas function
-    disamb_file = read_file(args.disambiguations).replace('\n', ' \n')
-
-    iteration = 1
-    words = word_count(content_list)
-
-    # Read stopwords into list
-    stopword_list = [word.strip() for word in read_file(args.stopwords).split('\n')]
-
-    results = []
-
-    # Run each line and word of the text
-    for line in content_list:
-        log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
-
-        for word in line[1].split(' '):
-            logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
-
-            # Remove dots, they confuse the parser
-            word = word.replace('.', '')
-
-            # Enlighten the user
-            print_progress(word, iteration, words)
-
-            # Increase iteration for use in progress function
-            iteration += 1
-
-            # Put all possible lemmas of token in list
-            match_list = find_lemmas(word, lemmas)
-            logging.debug('Matches for {0}: {1}'.format(
-                word.encode('utf-8'),
-                ' '.join(match_list).encode('utf-8')
-            ))
-
-            # Put the results in a list. If there is no match, it only
-            # shows the token form, if there is exactly one match, the
-            # token and the lemma are contained in the list, if there
-            # are more possible lemmas, then the token occurs first,
-            # followed by any amount of possible lemmas.
-            results.append([word] + match_list)
-
-
-            # # Matched > 1: Disambiguation needed
-            # elif len(match_list) > 1:
-
-            #     if word in disamb_file:
-            #         lemma = find_lemmas(word, disamb_file)[0]
-            #         logging.debug('Word {} in disambiguation. Registering as {}'.format(
-            #             word.encode('utf-8'),
-            #             lemma.encode('utf-8')))
-            #         match_list.append(word, lemma)
-            #     else:
-            #         disamb_list.append(
-            #             [word, line[1], [lemma.strip() for lemma in match_list]]
-            #         )
-
-
-    return(results)
-
-
-def create_index(content_list, lemma_list, args):
-    """Lemmatizes all words in text.
-    Variables:
-    - the text to be analyzed, split into list of lines.
-    - list of lemmas
-
-    Return:
-    - dictionary of sucessfully matched terms.
-    - list of terms in need of disambiguation.
-    - list of terms that could not be matched.
-    """
-    
-    def add_to_dict(key, value, dict):
-        """Add the word to the dictionary of matched. If there is no entry,
-        create it.
+    def print_progress(self, word, iteration, word_count):
+        """Output the progress of the scrip to std.out.
         """
-        if key in dict.keys():
-            dict[key].append(value)
-        else:
-            dict[key] = [value]
+        increment = word_count / 30.0
+        percent = (float(iteration) / word_count) * 100
+        percent = round((iteration / float(word_count)) * 100.0, 0)
+        stdout.write(' ' * 80)
+        stdout.write('\r')
+        stdout.write('Analyzing {:29}'.format(
+            word.encode('utf-8') + ' '* (29 - len(word))))
+        stdout.write('[{}{}]'.format(
+            '#' * int(round(iteration / increment, 0)),
+            ' ' * int(round((word_count - iteration) / increment, 0))))
+        stdout.write(' {:2.0f} %\r'.format(percent))
+        stdout.flush()
 
-    logging.debug('Initializing lemmatization function...')
+    def lemmatize_text(self):
+        """Lemmatizes all words in text.
+        Variables used:
+        - self.text: the text to be analyzed, split into list of lines.
 
-    # First some variables
-    lemmas = lemma_list
-    match_dict = {}
-    nomatch_list = []
-    disamb_list = []
-    # Hack: Add whitespace to end of disambiguation file for matching
-    # of tokens in find_lemmas function
-    disamb_file = read_file(args.disambiguations).replace('\n', ' \n')
+        Return:
+        - nested list of results. Each sublist either contains 1, 2 or more items. 
+        1 = no match, 2 = exact match, more = more possible matches.
+        """
 
-    iteration = 1
-    words = word_count(content_list)
+        logging.debug('Initializing lemmatization method...')
 
-    # Read stopwords into list
-    stopword_list = [word.strip() for word in read_file(args.stopwords).split('\n')]
+        # Initiate vars: match_list and results
+        match_list = []
+        results = []
 
+        # Set the iteration for the progress bar
+        iteration = 1
 
-    # Run each line and word of the text
-    for line in content_list:
-        log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
+        # Run each line and word of the text
+        for line in self.text:
+            log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
 
-        for word in line[1].split(' '):
-            logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
+            for word in line[1].split(' '):
+                logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
 
-            # Remove dots, they confuse the parser
-            word = word.replace('.', '')
+                # Remove dots, they confuse the parser
+                word = word.replace('.', '')
 
-            # Enlighten the user
-            print_progress(word, iteration, words)
+                # Enlighten the user
+                self.print_progress(word, iteration, self.word_count)
 
-            # Increase iteration for use in progress function
-            iteration += 1
+                # Increase iteration for use in progress function
+                iteration += 1
 
-            # NB: This line numbering identification is based on the assumption of stephanus-pages!
-            line_number = line[0].strip()
-
-            # Put all possible lemmas of token in list
-            match_list = find_lemmas(word, lemmas)
-
-            # If there is exactly one match, define the lemma and create
-            # an entry in the dictionary of matches
-            if len(match_list) == 1:
-                lemma = match_list[0]
-                log.debug('Single match in line {0}. Token: {1}; lemma: {2}.'.format(
-                    line_number,
+                # Put all possible lemmas of token in list
+                match_list = find_lemmas(word, self.lemmas)
+                logging.debug('Matches for {0}: {1}'.format(
                     word.encode('utf-8'),
-                    lemma.encode('utf-8'),
+                    ' '.join(match_list).encode('utf-8')
                 ))
 
-                # Weed out stopwords (can only be done with nonambiguous terms).
-                # TODO: Implement config to enable stopwords
-                if lemma in stopword_list:
-                    log.info(
-                        'Skipping {0} on line {1}. Matches {2} in stopword list.'.format(
-                            word.encode('utf-8'),
-                            line_number,
-                            lemma.encode('utf-8'),
-                        )
-                    )
-                    continue
+                # Put the results in a list. If there is no match, it only
+                # shows the token form, if there is exactly one match, the
+                # token and the lemma are contained in the list, if there
+                # are more possible lemmas, then the token occurs first,
+                # followed by any amount of possible lemmas.
+                results.append([word] + match_list)
 
-            # Sort into the three output lists according to amount of suggestions.            
-            # No match
-            if len(match_list) < 1:
-                nomatch_list.append(
-                    [word, line[1]]
-                )
 
-            # Matched > 1: Disambiguation needed
-            elif len(match_list) > 1:
+                # # Matched > 1: Disambiguation needed
+                # elif len(match_list) > 1:
 
-                if word in disamb_file:
-                    lemma = find_lemmas(word, disamb_file)[0]
-                    logging.debug('Word {} in disambiguation. Registering as {}'.format(
-                        word.encode('utf-8'),
-                        lemma.encode('utf-8')))
-                    add_to_dict(lemma, line_number, match_dict)
-                else:
-                    disamb_list.append(
-                        [word, line[1], [lemma.strip() for lemma in match_list]]
-                    )
+                #     if word in disamb_file:
+                #         lemma = find_lemmas(word, disamb_file)[0]
+                #         logging.debug('Word {} in disambiguation. Registering as {}'.format(
+                #             word.encode('utf-8'),
+                #             lemma.encode('utf-8')))
+                #         match_list.append(word, lemma)
+                #     else:
+                #         disamb_list.append(
+                #             [word, line[1], [lemma.strip() for lemma in match_list]]
+                #         )
 
-            # Matched exactly one word. Add line to corresponding lemma
-            # list in the dictionary of matches
+        return(results)
+
+    def create_index(self):
+        """Lemmatizes all words in text.
+        Variables used:
+        - self.text: the text to be analyzed, split into list of lines.
+        - self.lemmas: list of lemmas
+        - self.disambiguations: list of disambiguation terms
+
+        Return:
+        - dictionary of sucessfully matched terms.
+        - list of terms in need of disambiguation.
+        - list of terms that could not be matched.
+        """
+
+        def add_to_dict(key, value, dict):
+            """Add the word to the dictionary of matched. If there is no entry,
+            create it.
+            """
+            if key in dict.keys():
+                dict[key].append(value)
             else:
-                if lemma in match_dict.keys():
-                    match_dict[lemma].append(line_number)
+                dict[key] = [value]
+
+        logging.debug('Initializing lemmatization method...')
+
+        # First some variables
+        match_dict = {}
+        nomatch_list = []
+        disamb_list = []
+
+        iteration = 1
+
+        # Run each line and word of the text
+        for line in self.text:
+            log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
+
+            for word in line[1].split(' '):
+                logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
+
+                # Remove dots, they confuse the parser
+                word = word.replace('.', '')
+
+                # Enlighten the user
+                self.print_progress(word, iteration, self.word_count)
+
+                # Increase iteration for use in progress function
+                iteration += 1
+
+                # NB: This line numbering identification is based on the assumption of stephanus-pages!
+                line_number = line[0].strip()
+
+                # Put all possible lemmas of token in list
+                match_list = find_lemmas(word, self.lemmas)
+
+                # If there is exactly one match, define the lemma and create
+                # an entry in the dictionary of matches
+                if len(match_list) == 1:
+                    lemma = match_list[0]
+                    log.debug('Single match in line {0}. Token: {1}; lemma: {2}.'.format(
+                        line_number,
+                        word.encode('utf-8'),
+                        lemma.encode('utf-8'),
+                    ))
+
+                    # Weed out stopwords (can only be done with nonambiguous terms).
+                    # TODO: Implement config to enable stopwords
+                    if lemma in self.stopwords:
+                        log.info(
+                            'Skipping {0} on line {1}. Matches {2} in stopword list.'.format(
+                                word.encode('utf-8'),
+                                line_number,
+                                lemma.encode('utf-8'),
+                            )
+                        )
+                        continue
+
+                # Sort into the three output lists according to amount of suggestions.            
+                # No match
+                if len(match_list) < 1:
+                    nomatch_list.append(
+                        [word, line[1]]
+                    )
+
+                # Matched > 1: Disambiguation needed
+                elif len(match_list) > 1:
+
+                    if word in self.disambiguations:
+                        lemma = find_lemmas(word, self.disambiguations)[0]
+                        logging.debug('Word {} in disambiguation. Registering as {}'.format(
+                            word.encode('utf-8'),
+                            lemma.encode('utf-8')))
+                        add_to_dict(lemma, line_number, match_dict)
+                    else:
+                        disamb_list.append(
+                            [word, line[1], [lemma.strip() for lemma in match_list]]
+                        )
+
+                # Matched exactly one word. Add line to corresponding lemma
+                # list in the dictionary of matches
                 else:
-                    match_dict[lemma] = [line_number]
+                    if lemma in match_dict.keys():
+                        match_dict[lemma].append(line_number)
+                    else:
+                        match_dict[lemma] = [line_number]
 
-    match_dict = clean_matches(match_dict)
+        match_dict = clean_matches(match_dict)
 
-    return(match_dict, disamb_list, nomatch_list)
+        return(match_dict, disamb_list, nomatch_list)
 
 
 
@@ -496,7 +485,7 @@ def output_lemmas(matches, filename, args):
 
     for match in matches:
         output += ' '.join(match) + '\n'
-    
+
     if TO_SHELL:
         print('\nSorting and printing results')
         print(output)
@@ -577,14 +566,15 @@ if __name__ == "__main__":
 
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
-    
+
+    analysis = Analyze(content_list, lemmas, disambiguations=args.disambiguations, stopwords=args.stopwords)
+                                                                                                            
     if args.mode == 'index':
         logging.debug('Index mode selected.')
-        matches, disamb_list, nomatch_list = create_index(content_list, lemmas, args)
+        matches, disamb_list, nomatch_list = analysis.create_index()
         output_index(matches, disamb_list, nomatch_list, filename, args)
     else:
         logging.debug('Lemmatization mode selected.')
-        matches = lemmatize_text(content_list, lemmas, args)
-        output_lemmas(matches, filename, args)
+        output_lemmas(analysis.lemmatize_text(), filename, args)
 
     log.info('Results returned sucessfully.')
