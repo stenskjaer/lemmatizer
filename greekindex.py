@@ -20,27 +20,6 @@ def recursive_string_find(pattern, string, start=0):
     return [pos] + recursive_string_find(pattern, string, pos + len(pattern))
 
 
-# def find_lemmas_in_list(token, lemma_list):
-#     """Find the first word of a lemma list line which will therefore
-#     represent the lemma of the searched token
-
-#     Keyword Arguments:
-#     tokens -- list of tokens to be matched with lemmas
-#     """
-
-#     token = ' ' + token.strip() + ' '
-#     # lemma_lines = [line for line in lemma_list if ' ' + token.strip() + ' ' in line]
-#     def present_in_line(sequence, value):
-#         for element in sequence:
-#             if value in element: yield element
-
-#     lemma_lines = present_in_line(lemma_list, token)
-
-#     # lemma_lines = list(line for line in lemma_list if token in line)
-#     lemmas = [line.split(' ')[0] for line in lemma_lines]
-
-#     return(lemmas)
-
 def find_lemmas(token, lemma_string):
     """Find all the possible lemma suggestions to one token. Input the
     need and haystack, the token that needs to be parsed, and the list
@@ -58,6 +37,7 @@ def find_lemmas(token, lemma_string):
         result_list.append(match.strip())
 
     return(result_list)
+
 
 def clean_matches(dictionary_of_matches):
     """Function for counting instances of line references in the
