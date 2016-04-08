@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from unicodedata import normalize
 from sys import argv, stdout
+from time import strftime
 import re
 import logging
 
@@ -373,128 +374,100 @@ class Analyze(object):
         return(match_dict, disamb_list, nomatch_list)
 
 
+class Output(object):
+    """Output the input according to a given method."""
 
-def output_index(matches, disamb_list, nomatch_list, filename, args):
-    """Function for printing the results
+    def __init__(self, output=False):
+        self.output = output
 
-    """
-    from time import strftime
-    from pyuca import Collator
+    def return_output(self, output_string):
+        """Return the output to stdout, file or both, according to optional arguments."""
 
-    def lvl1(title):
+        if self.output == 'shell':
+            print(output_string)
+        elif self.output == 'file':
+            with open('output.txt', 'w') as f:
+                f.write(output_string)
+        elif self.output == 'both':
+            print(output_string)
+            with open('output.txt', 'w') as f:
+                f.write(output_string)
+
+    def lvl1(self, title):
+        """Format a level 2 markdown title and return it as string."""
         length = len(title)
         return '\n{0}\n{1}\n\n'.format(
             title,
             '=' * length,
         )
 
-    def lvl2(title):
+    def lvl2(self, title):
+        """Format a level two markdown title and return it as string."""
         length = len(title)
         return '\n{0}\n{1}\n\n'.format(
             title,
             '-' * length,
         )
 
-    TO_FILE = False
-    TO_SHELL = False
-    if args.output is 'shell':
-        TO_SHELL = True
-    elif args.output is 'file':
-        TO_FILE = True
-    elif args.output is 'both':
-        TO_FILE = True
-        TO_SHELL = True
+    def output_index(self, matches, disamb_list, nomatch_list, filename, args):
+        """Format the results of index method for printing, and return as
+        string.
 
+        """
+        try:
+            from pyuca import Collator
+        except ImportError:
+            exit('Error: To output the index we need `pyuca` to sort the unicode '
+                 'text properly. Run `pip install pyuca` and try again.')
+            
+        output = self.lvl1('Index of terms in {0}'.format(filename))
+        output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
+        output += self.lvl2('The following terms were found in the text:')
 
-    if TO_SHELL:
-        print('\nSorting and printing results')
+        # sorted(matches.keys()) iterates the keys alphabetically. Uses
+        # pyuca to sort the Greek properly. See https://github.com/jtauber/pyuca
+        c = Collator()
+        for term in sorted(matches.keys(), key=c.sort_key):
+            if term:                # Ugly hack to solve strange occurence of empty terms
+                output += '{0}: {1}'.format(
+                    term.encode('utf-8'),
+                    matches[term].encode('utf-8')
+                )
+        output += '\n'
 
-    output = ''
-
-    output += lvl1('Index of terms in {0}'.format(filename))
-    output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
-
-    output += lvl2('The following terms were found in the text:')
-
-    # sorted(matches.keys()) iterates the keys alphabetically. Uses
-    # pyuca to sort the Greek properly. See https://github.com/jtauber/pyuca
-    c = Collator()
-    for term in sorted(matches.keys(), key=c.sort_key):
-        if term:                # Ugly hack to solve strange occurence of empty terms
-            output += '{0}: {1}'.format(
-                term.encode('utf-8'),
-                matches[term].encode('utf-8')
+        output += self.lvl2('The following terms need disambiguation:')
+        for disamb_term in disamb_list:
+            output += '{0} in {1}\n'.format(
+                disamb_term[0].encode('utf-8'),
+                disamb_term[1].encode('utf-8')
             )
-    output += '\n'
+            output += 'Suggestions: {0}\n'.format(
+                ", ".join([suggestion.encode('utf-8') for suggestion in disamb_term[2]])
+            )
 
-    output += lvl2('The following terms need disambiguation:')
-    for disamb_term in disamb_list:
-        output += '{0} in {1}\n'.format(
-            disamb_term[0].encode('utf-8'),
-            disamb_term[1].encode('utf-8')
-        )
-        output += 'Suggestions: {0}\n'.format(
-            ", ".join([suggestion.encode('utf-8') for suggestion in disamb_term[2]])
-        )
+        output += self.lvl2('The following terms could not be found:')
+        for fail in nomatch_list:
+            output += '{0} in {1}\n'.format(
+                fail[0].encode('utf-8'),
+                fail[1].encode('utf-8')
+            )
 
-    output += lvl2('The following terms could not be found:')
-    for fail in nomatch_list:
-        output += '{0} in {1}\n'.format(
-            fail[0].encode('utf-8'),
-            fail[1].encode('utf-8')
-        )
+        self.return_output(output)
 
-    if TO_SHELL:
-        print(output)
+    def output_lemmas(self, matches, filename, args):
+        """Format the results of lemmatization for printing, and return as
+        string.
 
-    if TO_FILE:
-        with open('output.txt', 'w') as f:
-            f.write(output)
+        """
 
-    return(output)
+        output = self.lvl1('Lemmas of terms in {0}'.format(filename))
+        output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
 
+        for match in matches:
+            output += ' '.join(match).encode('utf-8') + '\n'
 
-def output_lemmas(matches, filename, args):
-    """Function for printing the results of the lemmatization
-    """
-    from time import strftime
-    from pyuca import Collator
+        self.return_output(output)
 
-    def lvl1(title):
-        length = len(title)
-        return '\n{0}\n{1}\n\n'.format(
-            title,
-            '=' * length,
-        )
-
-    TO_FILE = False
-    TO_SHELL = False
-    if args.output is 'shell':
-        TO_SHELL = True
-    elif args.output is 'file':
-        TO_FILE = True
-    elif args.output is 'both':
-        TO_FILE = True
-        TO_SHELL = True
-
-
-    output = ''
-
-    output += lvl1('Lemmas of terms in {0}'.format(filename))
-    output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
-
-    for match in matches:
-        output += ' '.join(match) + '\n'
-
-    if TO_SHELL:
-        print('\nSorting and printing results')
-        print(output)
-
-    if TO_FILE:
-        with open('output.txt', 'w') as f:
-            f.write(output)
-
-    return(output)
 
 if __name__ == "__main__":
     import argparse
@@ -567,14 +540,17 @@ if __name__ == "__main__":
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
 
+    # Initialize the objects for analysis and output
     analysis = Analyze(content_list, lemmas, disambiguations=args.disambiguations, stopwords=args.stopwords)
+    output = Output(args.output)
                                                                                                             
     if args.mode == 'index':
         logging.debug('Index mode selected.')
         matches, disamb_list, nomatch_list = analysis.create_index()
-        output_index(matches, disamb_list, nomatch_list, filename, args)
+        output.output_index(matches, disamb_list, nomatch_list, filename, args)
     else:
         logging.debug('Lemmatization mode selected.')
-        output_lemmas(analysis.lemmatize_text(), filename, args)
+        match_list = analysis.lemmatize_text()
+        output.output_lemmas(match_list, filename, args)
 
     log.info('Results returned sucessfully.')
