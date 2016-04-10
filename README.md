@@ -105,7 +105,48 @@ numbering scheme has been improved, this will get better documented.
 
 ## Handling line numbers
 
-Well, this area still leaves a lot to be wanted... 
+If you want, you can have the script make references to line numbers
+according to any scheme, with a simple condition. That the reference
+actually ends with a line number (for instance 432e3 or 1024a32), and
+that it is preceded by a dot (= 432e.3 or 1024a.32).
+
+You insert line markers in the text by adding a line starting with
+`##` followed by the line number. So for instance
+```
+##432.e.3
+```
+is a valid line marker.
+Whenever you want to update the reference, insert a new marker. Until
+the script meets a new marker, it will just add numbers to the
+previous line reference sequentially (432e.3, 432e.4, 432e.5, ...)
+
+To know where to start, the first line of the text much be a line
+marker.
+
+For instance
+```
+## 323.d.9
+Ἐπεστείλατέ μοι νομίζειν δεῖν τὴν διάνοιαν ὑμῶν εἶναι τὴν 
+αὐτὴν ἣν εἶχεν καὶ Δίων, καὶ δὴ καὶ κοινωνεῖν διεκελεύεσθέ 
+## 324.a.1
+μοι, καθ' ὅσον οἷός τέ εἰμι ἔργῳ καὶ λόγῳ. ἐγὼ δέ, εἰ μὲν
+δόξαν καὶ ἐπιθυμίαν τὴν αὐτὴν ἔχετε ἐκείνῳ, σύμφημι κοινω- 
+νήσειν, εἰ δὲ μή, βουλεύσεσθαι πολλάκις. τίς δ' ἦν ἡ 
+ἐκείνου διάνοια καὶ ἐπιθυμία, σχεδὸν οὐκ εἰκάζων ἀλλ' ὡς
+## 324.a.5
+εἰδὼς σαφῶς εἴποιμ' ἄν. ὅτε γὰρ κατ' ἀρχὰς εἰς Συρακούσας 
+ἐγὼ ἀφικόμην, σχεδὸν ἔτη τετταράκοντα γεγονώς, Δίων εἶχε 
+τὴν ἡλικίαν ἣν τὰ νῦν Ἱππαρῖνος γέγονεν, καὶ ἣν ἔσχεν
+## 324.b.1
+τότε δόξαν, ταύτην καὶ διετέλεσεν ἔχων, Συρακοσίους οἴεσθαι 
+δεῖν ἐλευθέρους εἶναι, κατὰ νόμους τοὺς ἀρίστους οἰκοῦντας· 
+ὥστε οὐδὲν θαυμαστὸν εἴ τις θεῶν καὶ τοῦτον εἰς τὴν αὐτὴν
+```
+will be the correct way to mark the first couple of lines of Plato's
+*Seventh Letter*.
+
+If you don't add any lines, the script will just number them
+sequentially.
 
 ## Formatting lemma, disambiguation, and stopword lists
 

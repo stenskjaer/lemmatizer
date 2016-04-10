@@ -166,30 +166,31 @@ def add_line_numbers_to_lines(list_of_lines):
     - That the line number is a stephanus-number (format example: `432.e.3')
     - That the very first line of the text contains such number
     """
+    return_list = []
 
-    new_line_list = []
-    last_line_mark = ""
-    pattern = re.compile(r'(^\d+\.[a-e]\.)(\d+)') # matches 432.e.3
-    for val, line in enumerate(content_list):
-        line = re.sub('\s+', ' ', line.strip())
-        match = pattern.match(line)
+    has_line_numbers = False
+    if list_of_lines[0][:2] == '##':
+        has_line_numbers = True
 
-        # The variable names need reworking here. Maybe just rewrite the scheme!
-        if match:
-            last_line_mark = match.group(1)     # e.g. 432.e.
-            last_line_num = int(match.group(2)) # e.g. 3
-            since_last_mark = 0
-            current_line_num = "{0}{1}".format(last_line_mark, last_line_num)
-            current_line_text = line[len(current_line_num):]
-            new_line_list.append([current_line_num, current_line_text])
-        else:
-            since_last_mark += 1
-            current_line_num = last_line_num + since_last_mark
-            current_line_mark = "{0}{1}".format(last_line_mark, current_line_num)
-            current_line_text = line[len(current_line_mark):]
-            new_line_list.append([current_line_mark, current_line_text])
+    if has_line_numbers == True:
+        for line in list_of_lines:
+            if line[:2] == '##':    # Contains a line number
+                current_line_reference = line[2:].strip()
+                reference_prefix = current_line_reference.rsplit('.', 1)[0]
+                line_number = int(current_line_reference.rsplit('.', 1)[1])
+                line_index = 0
+                continue            # Move on to next line
+            else:
+                line_number += line_index
+                current_line_reference = reference_prefix + str(line_number)
+                line_index += 1
 
-    return(new_line_list)
+
+            return_list.append([current_line_reference, line.strip()])
+    else:
+        return_list = [[val + 1, line] for val, line in enumerate(list_of_lines)]
+
+    return(return_list)
 
 
 class Analyze(object):
@@ -351,8 +352,8 @@ class Analyze(object):
                 # Increase iteration for use in progress function
                 iteration += 1
 
-                # NB: This line numbering identification is based on the assumption of stephanus-pages!
-                line_number = line[0].strip()
+                # Get the line number
+                line_number = str(line[0])
 
                 # Put all possible lemmas of token in list
                 match_list = find_lemmas(word, self.lemmas)
