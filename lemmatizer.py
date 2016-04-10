@@ -40,7 +40,7 @@ For more info, see https://github.com/stenskjaer/lemmatizer.
 
 from docopt import docopt
 from unicodedata import normalize
-from sys import argv, stdout
+from sys import stdout
 from time import strftime
 import re
 import logging
@@ -109,7 +109,7 @@ def read_file(filehandle):
     """Open, read and normalize encoding of file and return the content as
     string
     """
-    logging.debug('Opening and normalizing {}.'.format(filehandle))
+    log.debug('Opening and normalizing {}.'.format(filehandle))
     with open(filehandle, 'r') as f:
         content_read = f.read()
         content_normalized = normalize('NFC', content_read.decode('utf-8'))
@@ -203,7 +203,7 @@ class Analyze(object):
         self.disambiguations = read_file(disambiguations).replace('\n', ' \n')
         self.word_count = self.word_count(self.text)
 
-        logging.debug('Initialized an Analyze object')
+        log.debug('Initialized an Analyze object')
 
     def word_count(self, text):
         """Get wordcount from list of all words in text.
@@ -249,7 +249,7 @@ class Analyze(object):
         1 = no match, 2 = exact match, more = more possible matches.
         """
 
-        logging.debug('Initializing lemmatization method...')
+        log.debug('Initializing lemmatization method...')
 
         # Initiate vars: match_list and results
         match_list = []
@@ -263,7 +263,7 @@ class Analyze(object):
             log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
 
             for word in line[1].split(' '):
-                logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
+                log.debug('Analyzing {0}'.format(word.encode('utf-8')))
 
                 # Remove dots, they confuse the parser
                 word = word.replace('.', '')
@@ -276,7 +276,7 @@ class Analyze(object):
 
                 # Put all possible lemmas of token in list
                 match_list = find_lemmas(word, self.lemmas)
-                logging.debug('Matches for {0}: {1}'.format(
+                log.debug('Matches for {0}: {1}'.format(
                     word.encode('utf-8'),
                     ' '.join(match_list).encode('utf-8')
                 ))
@@ -294,7 +294,7 @@ class Analyze(object):
 
                 #     if word in disamb_file:
                 #         lemma = find_lemmas(word, disamb_file)[0]
-                #         logging.debug('Word {} in disambiguation. Registering as {}'.format(
+                #         log.debug('Word {} in disambiguation. Registering as {}'.format(
                 #             word.encode('utf-8'),
                 #             lemma.encode('utf-8')))
                 #         match_list.append(word, lemma)
@@ -327,7 +327,7 @@ class Analyze(object):
             else:
                 dict[key] = [value]
 
-        logging.debug('Initializing lemmatization method...')
+        log.debug('Initializing lemmatization method...')
 
         # First some variables
         match_dict = {}
@@ -341,7 +341,7 @@ class Analyze(object):
             log.debug('Start lemmatization of the line: ' + line[1].encode('utf-8'))
 
             for word in line[1].split(' '):
-                logging.debug('Analyzing {0}'.format(word.encode('utf-8')))
+                log.debug('Analyzing {0}'.format(word.encode('utf-8')))
 
                 # Remove dots, they confuse the parser
                 word = word.replace('.', '')
@@ -392,7 +392,7 @@ class Analyze(object):
 
                     if word in self.disambiguations:
                         lemma = find_lemmas(word, self.disambiguations)[0]
-                        logging.debug('Word {} in disambiguation. Registering as {}'.format(
+                        log.debug('Word {} in disambiguation. Registering as {}'.format(
                             word.encode('utf-8'),
                             lemma.encode('utf-8')))
                         add_to_dict(lemma, line_number, match_dict)
@@ -526,24 +526,23 @@ if __name__ == "__main__":
     log.info('App and logging initiated.')
 
     # Map command line arguments to script and filename vars
-    # script = argv[0]
     filename = args['FILE']
 
     # Open and read the text
     content = read_file(args['FILE'])
 
     content = normalize_greek_accents(content)
-    logging.debug('Normalized accents of the loaded text.')
+    log.debug('Normalized accents of the loaded text.')
 
     content_list = content.split("\n")
-    logging.debug('Text has been split into list of lines.')
+    log.debug('Text has been split into list of lines.')
 
     print('Reading the dictionary, be right back ...')
     lemmas = read_file(args['--lemmas'])
-    logging.debug('Lemma list read into memory')
+    log.debug('Lemma list read into memory')
 
     content_list = add_line_numbers_to_lines(content_list)
-    logging.debug('Line numbers added to list of lines.')
+    log.debug('Line numbers added to list of lines.')
 
     # Initialize the objects for analysis and output
     analysis = Analyze( content_list, lemmas,
@@ -552,11 +551,11 @@ if __name__ == "__main__":
     output = Output(args['--output'])
                                                                                                             
     if args['<command>'] == 'index':
-        logging.debug('Index mode selected.')
+        log.debug('Index mode selected.')
         matches, disamb_list, nomatch_list = analysis.create_index()
         output.output_index(matches, disamb_list, nomatch_list, filename)
     elif args['<command>'] == 'lemmatize':
-        logging.debug('Lemmatization mode selected.')
+        log.debug('Lemmatization mode selected.')
         match_list = analysis.lemmatize_text()
         output.output_lemmas(match_list, filename)
 
