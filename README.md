@@ -17,9 +17,9 @@ stopword files. Lemma lists are, in their very nature, big and pretty
 unwieldy, so I have removed the file `lemmalist.txt` from the
 repository, since you might not want to use it. Should you be
 interested in a greek lemma list that is based on Liddell, Scott and
-Jones, I suggest (my own
-repository)[https://github.com/stenskjaer/lemmalist-greek.git] since
-that is complies with the format required by the script.
+Jones, I suggest [my own
+repository](https://github.com/stenskjaer/lemmalist-greek.git) since
+that complies with the format required by the script.
 
 **Alternative tools:** This is a very small and modest
 script. Another, and maybe better, alternative for your project could
