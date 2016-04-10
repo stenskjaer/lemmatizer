@@ -11,6 +11,16 @@ is only in the format of Stephanus-pages (known from text editions of
 Plato and other classical authors). This should get changed soon to
 accommodate a range of different line numbering schemes.
 
+*A note on language*: I developed and used this script for Ancient
+Greek. That is reflected in the default lemma, disambiguation and
+stopword files. Lemma lists are, in their very nature, big and pretty
+unwieldy, so I have removed the file `lemmalist.txt` from the
+repository, since you might not want to use it. Should you be
+interested in a greek lemma list that is based on Liddell, Scott and
+Jones, I suggest (my own
+repository)[https://github.com/stenskjaer/lemmalist-greek.git] since
+that is complies with the format required by the script.
+
 ## Basic usage
 ```lemmatize.py <command> [options] FILE```
 
