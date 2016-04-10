@@ -11,7 +11,7 @@ is only in the format of Stephanus-pages (known from text editions of
 Plato and other classical authors). This should get changed soon to
 accommodate a range of different line numbering schemes.
 
-*A note on language*: I developed and used this script for Ancient
+**A note on language:** I developed and used this script for Ancient
 Greek. That is reflected in the default lemma, disambiguation and
 stopword files. Lemma lists are, in their very nature, big and pretty
 unwieldy, so I have removed the file `lemmalist.txt` from the
@@ -20,6 +20,17 @@ interested in a greek lemma list that is based on Liddell, Scott and
 Jones, I suggest (my own
 repository)[https://github.com/stenskjaer/lemmalist-greek.git] since
 that is complies with the format required by the script.
+
+**Alternative tools:** This is a very small and modest
+script. Another, and maybe better, alternative for your project could
+be the [Classical Language Toolkit](http://cltk.org/). This massive,
+and very impressive, suite of tools also contains a lemmatizer (see
+[the docs](http://docs.cltk.org/en/latest/greek.html#lemmatization))
+which is based on the same material as this approach. The approach is
+not quite identical though, as is solves the problem of ambiguities by
+letting all ambiguous forms resolve to the most frequently used
+possible lemma. If you like it that way, the CLTK approach is probably
+significantly more efficient than my solution.
 
 ## Basic usage
 ```lemmatize.py <command> [options] FILE```
