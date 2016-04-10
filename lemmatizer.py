@@ -7,7 +7,7 @@ on a full form lemma list. It is also possible to create an index
 locorum based on the lemmatizations.
 
 Arguments:
-  FILE    A plain text file containing the text you want analyzed.
+  FILE       A plain text file containing the text you want analyzed.
 
 Commands:
   lemmatize  Lemmatize each word in the input file and return the results.
@@ -34,6 +34,8 @@ Options:
   -q, --quiet             Do you want the script to run quietly?
   -v, --version           Show script version and exit.
   -h, --help              Show this help message and exit.
+
+For more info, see https://github.com/stenskjaer/lemmatizer.
 """
 
 from docopt import docopt
