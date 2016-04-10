@@ -240,3 +240,8 @@ This is not implemented yet...
  - [ ] Do a bit of performance testing to see how it performs with
    larger files.
  - [ ] Document the index locorum function.
+
+# License
+Copyright (c) 2016 Michael Stenskjær Christensen
+
+The script is licensed under the MIT license.
