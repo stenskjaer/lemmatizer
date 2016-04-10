@@ -1,5 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Usage: lemmatize.py <command> [options] FILE
+
+A script for identifying dictionary forms of words in a text based
+on a full form lemma list. It is also possible to create an index
+locorum based on the lemmatizations.
+
+Arguments:
+  FILE    A plain text file containing the text you want analyzed.
+
+Commands:
+  lemmatize  Lemmatize each word in the input file and return the results.
+  index      Create an index locorum based on the lemmatization of the input
+             file.
+
+Options:
+  -l, --lemmas <file>     A plain text file containing the lemmas to be used for
+                          the analysis. This must be a full form lemma list,
+                          i.e. a list where each line first contains the lemma
+                          followed by all the forms of the lemma that you want
+                          the script to recognize. [default: lemmalist.txt]
+  -s, --stopwords <file>  A plain text file containing the words that you want
+                          the script to skip. [default: stopwords.txt]
+  -d, --disambiguations <file>
+                          A plain text file instructing the script on which of
+                          several possibilities should be preferred in need of
+                          disambiguation. [default: disambiguations.txt]
+  -o, --output <mode>     How do you want it served? Shell, file or both? Output
+                          to file is put in a file called `output.txt` in the
+                          working directory. [default: shell]
+  -l, --log <level>       Set the verbosity of the log. Optional levels are
+                          currently just `info` and `debug`. [default: info]
+  -q, --quiet             Do you want the script to run quietly?
+  -v, --version           Show script version and exit.
+  -h, --help              Show this help message and exit.
+"""
+
+from docopt import docopt
 from unicodedata import normalize
 from sys import argv, stdout
 from time import strftime
@@ -409,7 +446,7 @@ class Output(object):
             '-' * length,
         )
 
-    def output_index(self, matches, disamb_list, nomatch_list, filename, args):
+    def output_index(self, matches, disamb_list, nomatch_list, filename):
         """Format the results of index method for printing, and return as
         string.
 
@@ -419,8 +456,8 @@ class Output(object):
         except ImportError:
             exit('Error: To output the index we need `pyuca` to sort the unicode '
                  'text properly. Run `pip install pyuca` and try again.')
-            
-        output = self.lvl1('Index of terms in {0}'.format(filename))
+
+        output = self.lvl1('\nIndex of terms in {0}'.format(filename))
         output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
         output += self.lvl2('The following terms were found in the text:')
 
@@ -428,7 +465,7 @@ class Output(object):
         # pyuca to sort the Greek properly. See https://github.com/jtauber/pyuca
         c = Collator()
         for term in sorted(matches.keys(), key=c.sort_key):
-            if term:                # Ugly hack to solve strange occurence of empty terms
+            if term:       # Ugly hack to solve strange occurence of empty terms
                 output += '{0}: {1}'.format(
                     term.encode('utf-8'),
                     matches[term].encode('utf-8')
@@ -454,13 +491,13 @@ class Output(object):
 
         self.return_output(output)
 
-    def output_lemmas(self, matches, filename, args):
+    def output_lemmas(self, matches, filename):
         """Format the results of lemmatization for printing, and return as
         string.
 
         """
 
-        output = self.lvl1('Lemmas of terms in {0}'.format(filename))
+        output = self.lvl1('\nLemmas of terms in {0}'.format(filename))
         output += 'Results generated on {0}\n'.format(strftime("%Y-%m-%d %H:%M:%S"))
 
         for match in matches:
@@ -470,46 +507,12 @@ class Output(object):
 
 
 if __name__ == "__main__":
-    import argparse
 
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(
-        description='Create a list with references to each occurence of any form of any Greek term in a Greek text. The program parses all terms based on a supplied list of lemmas. All identified forms, as well as forms ascribable to more than one lemma and forms that are not found in the lemma list, will be listed.',
-        epilog='The lines of the text must be numbered at regular intervals. Currently the only usable scheme is the Stephanus-numbering with this format "324.d.2". The first line MUST be numbered, otherwise the script fails.'
-    )
-    parser.add_argument('file',
-                        help='The file containing the text that will be analyzed.')
-    parser.add_argument('-m', '--mode',
-                        help='Select which type of analysis and consequently output is wished for. Lemmatization mode returns a list of sets containing each token and lemma in the order of their appearance in the text. Index mode returns an alphabetized list of all the lemmas in the text with reference to their occurence.',
-                        choices=['lemmatize', 'index'],
-                        action='store',
-                        default='lemmatize')
-    parser.add_argument('--lemmalist',
-                        help='The file containing a list of all relevant lemmas. It is to be formatted as follows: One headword per line, with the lemma as the first word with all possible (or relevant) forms following, separated by one whitespace. The liste must be terminated by one whitespace too. "ἅπλωσις ἅπλωσιν ἅπλωσις ἁπλώσει ἁπλώσεις ἁπλώσεως " would this be a well formed statement of all attested forms of the noun ἅπλωσις.',
-                        action='store',
-                        default='lemmalist.txt')
-    parser.add_argument('-o', '--output',
-                        help='Output the results to shell, file or both. Default: Shell.',
-                        choices=['shell', 'file', 'both'],
-                        action='store',
-                        default='shell')
-    parser.add_argument('-s', '--stopwords',
-                        help='The file containing a list of stopwords. One word per line, no punctuation. Default: stopwords.txt',
-                        action='store',
-                        default='stopwords.txt'),
-    parser.add_argument('-d', '--disambiguations',
-                        help='The file containing a list of preferred disambiguations. The first word represents the preferred lemma, all subsequent forms represent possible forms of that lemma. One lemma per line with terms separated by one space. Default: disambiguations.txt',
-                        action='store',
-                        default='disambiguations.txt')
-    parser.add_argument('--log',
-                        help='Set the log level (output to output.log in currenct working directory). Default = info.',
-                        choices=['info', 'debug'],
-                        action='store',
-                        default='info')
-    args = parser.parse_args()
+    # Read command line arguments
+    args = docopt(__doc__, version='0.0.9')
 
     # Setup logging
-    loglevel = args.log
+    loglevel = args['--log']
     logging.basicConfig(
         filename='output.log',
         filemode='w',
@@ -520,12 +523,11 @@ if __name__ == "__main__":
     log.info('App and logging initiated.')
 
     # Map command line arguments to script and filename vars
-    script = argv[0]
-    filename = argv[1]
-
+    # script = argv[0]
+    filename = args['FILE']
 
     # Open and read the text
-    content = read_file(args.file)
+    content = read_file(args['FILE'])
 
     content = normalize_greek_accents(content)
     logging.debug('Normalized accents of the loaded text.')
@@ -534,23 +536,25 @@ if __name__ == "__main__":
     logging.debug('Text has been split into list of lines.')
 
     print('Reading the dictionary, be right back ...')
-    lemmas = read_file(args.lemmalist)
+    lemmas = read_file(args['--lemmas'])
     logging.debug('Lemma list read into memory')
 
     content_list = add_line_numbers_to_lines(content_list)
     logging.debug('Line numbers added to list of lines.')
 
     # Initialize the objects for analysis and output
-    analysis = Analyze(content_list, lemmas, disambiguations=args.disambiguations, stopwords=args.stopwords)
-    output = Output(args.output)
+    analysis = Analyze( content_list, lemmas,
+                        disambiguations=args['--disambiguations'],
+                        stopwords=args['--stopwords'] )
+    output = Output(args['--output'])
                                                                                                             
-    if args.mode == 'index':
+    if args['<command>'] == 'index':
         logging.debug('Index mode selected.')
         matches, disamb_list, nomatch_list = analysis.create_index()
-        output.output_index(matches, disamb_list, nomatch_list, filename, args)
-    else:
+        output.output_index(matches, disamb_list, nomatch_list, filename)
+    elif args['<command>'] == 'lemmatize':
         logging.debug('Lemmatization mode selected.')
         match_list = analysis.lemmatize_text()
-        output.output_lemmas(match_list, filename, args)
+        output.output_lemmas(match_list, filename)
 
     log.info('Results returned sucessfully.')
