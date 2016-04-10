@@ -240,4 +240,3 @@ This is not implemented yet...
  - [ ] Do a bit of performance testing to see how it performs with
    larger files.
  - [ ] Document the index locorum function.
- - [ ] Document the line numbering scheme.
