@@ -281,27 +281,23 @@ class Analyze(object):
                     ' '.join(match_list).encode('utf-8')
                 ))
 
-                # Put the results in a list. If there is no match, it only
-                # shows the token form, if there is exactly one match, the
-                # token and the lemma are contained in the list, if there
-                # are more possible lemmas, then the token occurs first,
-                # followed by any amount of possible lemmas.
-                results.append([word] + match_list)
+                # Put the results in a list. If there is no match, it only shows
+                # the token form, if there is exactly one match, the token and
+                # the lemma are contained in the list, if there are more
+                # possible lemmas, it will look in the disambiguation list, and
+                # either return the disambiguated lemma or all possible lemmas.
+                if len(match_list) > 1:
+                    if word in self.disambiguations:
+                        lemma = find_lemmas(word, self.disambiguations)[0]
+                        log.debug('Word {} is disambiguated to {}'.format(
+                            word.encode('utf-8'),
+                            lemma.encode('utf-8')))
+                        results.append([word, lemma])
+                    else:
+                        results.append([word] + match_list)
 
-
-                # # Matched > 1: Disambiguation needed
-                # elif len(match_list) > 1:
-
-                #     if word in disamb_file:
-                #         lemma = find_lemmas(word, disamb_file)[0]
-                #         log.debug('Word {} in disambiguation. Registering as {}'.format(
-                #             word.encode('utf-8'),
-                #             lemma.encode('utf-8')))
-                #         match_list.append(word, lemma)
-                #     else:
-                #         disamb_list.append(
-                #             [word, line[1], [lemma.strip() for lemma in match_list]]
-                #         )
+                else:
+                    results.append([word] + match_list)
 
         return(results)
 
